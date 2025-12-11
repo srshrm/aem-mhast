@@ -4,5 +4,6 @@
 .DS_Store
 .dev.vars
 .wrangler/
+.idea/
 wrangler.toml.local
 node_modules/

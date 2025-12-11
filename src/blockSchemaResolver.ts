@@ -67,7 +67,24 @@ interface BlockSchema {
  */
 export async function fetchBlockSchema(blockName: string, ctx: Ctx): Promise<BlockSchema | null> {
   try {
-    const schemaUrl = `${ctx.edsDomainUrl}/blocks/${blockName}/${blockName}.schema.json`;
+    // Determine base domain: use edsDomainUrl if available, otherwise extract from sourceUrl
+    let baseDomain = ctx.edsDomainUrl;
+    if (!baseDomain && ctx.sourceUrl) {
+      try {
+        const sourceUrlObj = new URL(ctx.sourceUrl);
+        baseDomain = `${sourceUrlObj.protocol}//${sourceUrlObj.hostname}`;
+      } catch (error) {
+        console.warn(`Failed to extract domain from sourceUrl: ${ctx.sourceUrl}`, error);
+        return null;
+      }
+    }
+
+    if (!baseDomain) {
+      console.warn(`No domain available for fetching schema for block ${blockName}`);
+      return null;
+    }
+
+    const schemaUrl = `${baseDomain}/blocks/${blockName}/${blockName}.schema.json`;
 
     const response = await fetch(schemaUrl);
     if (response.ok) {

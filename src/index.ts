@@ -26,7 +26,18 @@ export default {
 
       const ctx = getCtx(request.url);
       console.log('🔧 Context parsed:', JSON.stringify(ctx, null, 2));
-      const edsContentUrl = `${ctx.edsDomainUrl}/${ctx.contentPath}`;
+
+      // Use direct URL if provided, otherwise construct from edsDomainUrl and contentPath
+      let edsContentUrl: string;
+      if (ctx.sourceUrl) {
+        edsContentUrl = ctx.sourceUrl;
+      } else if (ctx.edsDomainUrl && ctx.contentPath !== undefined) {
+        edsContentUrl = `${ctx.edsDomainUrl}/${ctx.contentPath}`;
+      } else {
+        throw new Error('Invalid request: must provide either ?url= parameter or /org/site/path format');
+      }
+      console.log('🌐 Fetching from:', edsContentUrl);
+
       const edsResp = await fetch(edsContentUrl, { cf: { scrapeShield: false } });
       if (!edsResp.ok) {
         return new Response(`Failed to fetch EDS page: ${edsContentUrl}`, { status: edsResp.status });
